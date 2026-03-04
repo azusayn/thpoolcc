@@ -1,15 +1,10 @@
 cmake_minimum_required(VERSION 3.25)
-project(Template VERSION 0.0.1)
-
-find_package(fmt CONFIG REQUIRED)
+project(thpoolcc VERSION 0.0.1)
+set(CMAKE_CXX_STANDARD 11)
 
 file(GLOB SOURCES "src/*.cc" "src/*.cpp")
 file(GLOB INCLUDE_DIR "include")
 
-add_executable(Main ${SOURCES})
+add_executable(main ${SOURCES})
 
-target_include_directories(Main PRIVATE ${INCLUDE_DIR})
-
-target_link_libraries(Main
-  fmt::fmt
-)
+target_include_directories(main PRIVATE ${INCLUDE_DIR})

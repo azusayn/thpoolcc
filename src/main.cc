@@ -1,6 +1,5 @@
-#include "main.h"
+#include "thpoolcc.h"
 
-int main(int argc, char* argv[]) {
-  fmt::println("this is a template");
+int main(int argc, char *argv[]) {
   return 0;
 }
