@@ -2,7 +2,7 @@
 
 A thread pool implemented with POSIX APIs. May be re-implemented with the C++ standard library for cross-platform compatibility.
 
-## build
+## Build
 ```c++
   mkdir build && cd build
   cmake ..
