@@ -1,75 +1,15 @@
+#include "lock_free_queue.hpp"
+#include "thread_pool.hpp"
 #include <atomic>
-#include <cassert>
-#include <cstddef>
-#include <cstdint>
-#include <cstdlib>
 #include <iostream>
 #include <thread>
 #include <vector>
 
-template <typename T> class LockFreeQueue {
-public:
-  explicit LockFreeQueue(int32_t size)
-      : buffer_(size), size_(size), head_(0), tail_(0) {
-    if (size < 2 || size_ & (size_ - 1)) {
-      std::cerr << "size must be a power of 2 and >= 2\n";
-      std::abort();
-    }
-    for (size_t i = 0; i < size_; ++i) {
-      buffer_[i].sequence.store(i, std::memory_order_relaxed);
-    }
-  }
-
-  bool Push(T &&val) {
-    for (;;) {
-      auto tail = tail_.load(std::memory_order_relaxed);
-      auto &slot = buffer_[idx(tail)];
-      if (slot.sequence.load(std::memory_order_acquire) != tail) {
-        return false;
-      }
-      if (tail_.compare_exchange_weak(tail, tail + 1, std::memory_order_relaxed,
-                                      std::memory_order_relaxed)) {
-        slot.data = std::move(val);
-        slot.sequence.store(tail + 1, std::memory_order_release);
-        return true;
-      }
-    }
-  }
-
-  bool Pop(T &val) {
-    for (;;) {
-      auto head = head_.load(std::memory_order_relaxed);
-      auto &slot = buffer_[idx(head)];
-      if (slot.sequence.load(std::memory_order_acquire) != head + 1) {
-        return false;
-      }
-      if (head_.compare_exchange_weak(head, head + 1, std::memory_order_relaxed,
-                                      std::memory_order_relaxed)) {
-        val = slot.data;
-        slot.sequence.store(head + size_, std::memory_order_release);
-        return true;
-      }
-    }
-  }
-
-private:
-  struct Slot {
-    T data;
-    std::atomic<uint64_t> sequence;
-  };
-  inline uint64_t idx(uint64_t val) { return val & (size_ - 1); }
-
-  std::atomic<uint64_t> head_;
-  std::atomic<uint64_t> tail_;
-  size_t size_;
-  std::vector<Slot> buffer_;
-};
-
-int TestBufferRing() {
+int TestLockFreeQueue() {
   constexpr int kTotal = 1000000;
   constexpr int kProducers = 7;
   constexpr int kConsumers = 13;
-  LockFreeQueue<int> rb(4096);
+  azusayn::LockFreeQueue<int> rb(4096);
   std::atomic<int> sum_produced{0};
   std::atomic<int> sum_consumed{0};
   std::atomic<int> consumed_count{0};
@@ -104,9 +44,70 @@ int TestBufferRing() {
   return sum_produced == sum_consumed;
 }
 
-int main(int argc, char *argv[]) {
-  if (TestBufferRing()) {
-    std::cout << "success!\n";
+void TestThreadPool() {
+#define CHECK(cond, msg)                                                       \
+  do {                                                                         \
+    if (!(cond)) {                                                             \
+      std::cerr << "FAILED: " << msg << "\n";                                  \
+      std::abort();                                                            \
+    }                                                                          \
+  } while (0)
+  // basic submit and wait
+  {
+    azusayn::ThreadPool pool(4);
+    std::atomic<int> counter{0};
+
+    for (int i = 0; i < 100; ++i) {
+      CHECK(pool.Submit([&counter]() {
+        counter.fetch_add(1, std::memory_order_relaxed);
+      }),
+            "submit failed");
+    }
+
+    pool.Wait();
+    CHECK(counter.load() == 100, "basic: counter should be 100");
+    std::cout << "basic submit/wait: passed\n";
   }
+
+  // multiple threads competing
+  {
+    azusayn::ThreadPool pool(8);
+    std::atomic<int> sum{0};
+    constexpr int kTotal = 10000;
+
+    for (int i = 0; i < kTotal; ++i) {
+      pool.Submit([&sum, i]() { sum.fetch_add(i, std::memory_order_relaxed); });
+    }
+
+    pool.Wait();
+    int expected = kTotal * (kTotal - 1) / 2;
+    CHECK(sum.load() == expected, "mpmc: sum mismatch");
+    std::cout << "mpmc stress: passed\n";
+  }
+
+  // submit after destroy should fail
+  {
+    azusayn::ThreadPool pool(2);
+    pool.Destroy();
+    CHECK(!pool.Submit([]() {}), "submit after destroy should fail");
+    std::cout << "submit after destroy: passed\n";
+  }
+
+  // wait with no tasks should return immediately
+  {
+    azusayn::ThreadPool pool(2);
+    auto start = std::chrono::steady_clock::now();
+    pool.Wait();
+    auto elapsed = std::chrono::steady_clock::now() - start;
+    CHECK(elapsed < std::chrono::milliseconds(100),
+          "wait with no tasks should be fast");
+    std::cout << "wait with no tasks: passed\n";
+  }
+
+  std::cout << "all tests passed\n";
+}
+
+int main(int argc, char *argv[]) {
+  TestThreadPool();
   return 0;
 }
