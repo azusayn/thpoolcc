@@ -7,9 +7,9 @@
 #include <thread>
 #include <vector>
 
-template <typename T> class RingBuffer {
+template <typename T> class LockFreeQueue {
 public:
-  explicit RingBuffer(int32_t size)
+  explicit LockFreeQueue(int32_t size)
       : buffer_(size), size_(size), head_(0), tail_(0) {
     if (size < 2 || size_ & (size_ - 1)) {
       std::cerr << "size must be a power of 2 and >= 2\n";
@@ -69,11 +69,10 @@ int TestBufferRing() {
   constexpr int kTotal = 1000000;
   constexpr int kProducers = 7;
   constexpr int kConsumers = 13;
-  RingBuffer<int> rb(4096);
+  LockFreeQueue<int> rb(4096);
   std::atomic<int> sum_produced{0};
   std::atomic<int> sum_consumed{0};
   std::atomic<int> consumed_count{0};
-
   std::vector<std::thread> producers;
   for (int t = 0; t < kProducers; ++t) {
     producers.emplace_back([&, t]() {
@@ -84,7 +83,6 @@ int TestBufferRing() {
       }
     });
   }
-
   std::vector<std::thread> consumers;
   for (int t = 0; t < kConsumers; ++t) {
     consumers.emplace_back([&]() {
@@ -97,15 +95,12 @@ int TestBufferRing() {
       }
     });
   }
-
   for (auto &p : producers) {
     p.join();
   }
-
   for (auto &c : consumers) {
     c.join();
   }
-
   return sum_produced == sum_consumed;
 }
 
