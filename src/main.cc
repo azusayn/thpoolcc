@@ -1,5 +1,6 @@
 
 #include <atomic>
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
@@ -7,8 +8,11 @@
 
 template <typename T> class RingBuffer {
 public:
+  // capacity must be a power of 2.
   explicit RingBuffer(int32_t capacity)
-      : buffer_(capacity + 1), size_(capacity + 1), head_(0), tail_(0) {}
+      : buffer_(capacity + 1), size_(capacity + 1), head_(0), tail_(0) {
+    assert(!(size_ % 2));
+  }
 
   bool Push(T &&val) {
     if (idx(tail_ + 1) == idx(head_)) {
@@ -29,7 +33,7 @@ public:
   }
 
 private:
-  inline uint64_t idx(uint64_t val) { return val % size_; }
+  inline uint64_t idx(uint64_t val) { return val & (size_ - 1); }
 
   std::atomic<uint64_t> head_;
   std::atomic<uint64_t> tail_;
