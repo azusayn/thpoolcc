@@ -3,15 +3,18 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <iostream>
 #include <vector>
 
 template <typename T> class RingBuffer {
 public:
-  // capacity must be a power of 2.
   explicit RingBuffer(int32_t capacity)
       : buffer_(capacity + 1), size_(capacity + 1), head_(0), tail_(0) {
-    assert(!(size_ % 2));
+    if (size_ & (size_ - 1)) {
+      std::cerr << "capacity must be a power of 2\n";
+      std::abort();
+    }
   }
 
   bool Push(T &&val) {
