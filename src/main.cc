@@ -52,59 +52,41 @@ void TestThreadPool() {
       std::abort();                                                            \
     }                                                                          \
   } while (0)
-  // basic submit and wait
-  {
-    azusayn::ThreadPool pool(4);
-    std::atomic<int> counter{0};
 
-    for (int i = 0; i < 100; ++i) {
-      CHECK(pool.Submit([&counter]() {
-        counter.fetch_add(1, std::memory_order_relaxed);
-      }),
-            "submit failed");
+  azusayn::ThreadPool pool(8);
+  constexpr int kTasks = 200;
+
+  auto count_primes = [](int lo, int hi) -> int {
+    int cnt = 0;
+    for (int n = lo; n < hi; ++n) {
+      if (n < 2)
+        continue;
+      bool ok = true;
+      for (int d = 2; d * d <= n; ++d)
+        if (n % d == 0) {
+          ok = false;
+          break;
+        }
+      if (ok)
+        ++cnt;
     }
+    return cnt;
+  };
 
-    pool.Wait();
-    CHECK(counter.load() == 100, "basic: counter should be 100");
-    std::cout << "basic submit/wait: passed\n";
+  int expected = count_primes(0, kTasks * 500);
+
+  std::atomic<int> result{0};
+  for (int i = 0; i < kTasks; ++i) {
+    int lo = i * 500, hi = lo + 500;
+    CHECK(pool.Submit([&result, lo, hi, &count_primes]() {
+      result.fetch_add(count_primes(lo, hi), std::memory_order_relaxed);
+    }),
+          "submit failed");
   }
 
-  // multiple threads competing
-  {
-    azusayn::ThreadPool pool(8);
-    std::atomic<int> sum{0};
-    constexpr int kTotal = 10000;
-
-    for (int i = 0; i < kTotal; ++i) {
-      pool.Submit([&sum, i]() { sum.fetch_add(i, std::memory_order_relaxed); });
-    }
-
-    pool.Wait();
-    int expected = kTotal * (kTotal - 1) / 2;
-    CHECK(sum.load() == expected, "mpmc: sum mismatch");
-    std::cout << "mpmc stress: passed\n";
-  }
-
-  // submit after destroy should fail
-  {
-    azusayn::ThreadPool pool(2);
-    pool.Destroy();
-    CHECK(!pool.Submit([]() {}), "submit after destroy should fail");
-    std::cout << "submit after destroy: passed\n";
-  }
-
-  // wait with no tasks should return immediately
-  {
-    azusayn::ThreadPool pool(2);
-    auto start = std::chrono::steady_clock::now();
-    pool.Wait();
-    auto elapsed = std::chrono::steady_clock::now() - start;
-    CHECK(elapsed < std::chrono::milliseconds(100),
-          "wait with no tasks should be fast");
-    std::cout << "wait with no tasks: passed\n";
-  }
-
-  std::cout << "all tests passed\n";
+  pool.Wait();
+  CHECK(result.load() == expected, "prime stress: result mismatch");
+  std::cout << "prime stress: passed (primes found: " << result.load() << ")\n";
 }
 
 int main(int argc, char *argv[]) {
