@@ -1,6 +1,6 @@
 # ThreadPoolCC
 
-A lock-free C++ thread pool with an MPMC queue, implemented using only the C++ standard library.
+A header-only, lock-free C++ thread pool with an MPMC queue, implemented using only the C++ standard library.
 
 ## Build
 

@@ -4,8 +4,9 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE Release)
 
-file(GLOB SOURCES "*.cc" "*.cpp")
-
-add_executable(perf ${SOURCES})
-
-target_include_directories(perf PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+file(GLOB PERF_SOURCES "perf/*.cc" "perf/*.cpp")
+foreach(src ${PERF_SOURCES})
+  get_filename_component(target ${src} NAME_WE)
+  add_executable(${target} ${src})
+  target_include_directories(${target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+endforeach()
