@@ -6,6 +6,6 @@ set(CMAKE_BUILD_TYPE Release)
 
 file(GLOB SOURCES "*.cc" "*.cpp")
 
-add_executable(main ${SOURCES})
+add_executable(perf ${SOURCES})
 
-target_include_directories(main PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(perf PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
