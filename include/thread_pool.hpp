@@ -1,6 +1,6 @@
 // +--------------------------------+
 // | Author:    azusaings@gmail.com |
-// | License:	  GPLv3.0             |
+// | License:   GPLv3.0             |
 // | Date:      2024.1.14           |
 // +--------------------------------+
 #ifndef __THREAD_POOL_CC_H

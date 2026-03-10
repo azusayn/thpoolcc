@@ -1,6 +1,6 @@
 // +--------------------------------+
 // | Author:    azusaings@gmail.com |
-// | License:	  GPLv3.0             |
+// | License:   GPLv3.0             |
 // | Date:      2026.3.9            |
 // +--------------------------------+
 #ifndef __LOCK_FREE_QUEUE_H
