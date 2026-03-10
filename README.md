@@ -13,15 +13,15 @@ A lock-free C++ thread pool with an MPMC queue, implemented using only the C++ s
 ## API
 
 ```c++
-  // initialization
+  // initialization.
   ThreadPool(uint32_t n_threads, uint32_t queueSize = 8192);
 
-  // submit tasks
+  // submits a task (non-blocking), returns false if the queue is full. 
   bool Submit(std::function<void()> func);
 
-  // destroy the thread pool and recycle all the resources
+  // destroys the thread pool and recycle all the resources.
   void Destroy();
   
-  // wait until the task queue is empty and all threads are idle
+  // waits until the task queue is empty and all threads are idle.
   void Wait();
 ```
