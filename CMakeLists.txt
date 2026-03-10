@@ -4,9 +4,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE Release)
 
-file(GLOB SOURCES "src/*.cc" "src/*.cpp")
-file(GLOB INCLUDE_DIR "include")
+file(GLOB SOURCES "*.cc" "*.cpp")
 
 add_executable(main ${SOURCES})
 
-target_include_directories(main PRIVATE ${INCLUDE_DIR})
+target_include_directories(main PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
