@@ -3,13 +3,15 @@
 A lock-free C++ thread pool with an MPMC queue, implemented using only the C++ standard library.
 
 ## Build
+
 ```c++
   mkdir build && cd build
   cmake ..
-  cmake --build .
+  cmake --build . --config Release
 ```
 
 ## API
+
 ```c++
   // initialization
   ThreadPool(uint32_t n_threads, uint32_t queueSize = 8192);
