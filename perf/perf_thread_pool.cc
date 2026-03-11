@@ -7,7 +7,7 @@
 int main() {
   azusayn::ThreadPool pool(16);
   constexpr int kTasks = 16;
-  constexpr int kTotal = 100000000;
+  constexpr int kTotal = 10000000;
   constexpr int kChunk = kTotal / kTasks;
 
   auto count_primes = [](int lo, int hi) -> int {

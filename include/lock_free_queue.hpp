@@ -3,14 +3,10 @@
 // | License:   GPLv3.0             |
 // | Date:      2026.3.9            |
 // +--------------------------------+
-#ifndef __LOCK_FREE_QUEUE_H
-#define __LOCK_FREE_QUEUE_H
-
+#pragma once
 #include <atomic>
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
-#include <cstdlib>
 #include <iostream>
 #include <vector>
 
@@ -20,7 +16,7 @@ template <typename T> class LockFreeQueue {
 public:
   explicit LockFreeQueue(uint32_t size)
       : buffer_(size), size_(size), head_(0), tail_(0) {
-    if (size < 2 || size_ & (size_ - 1)) {
+    if (size < 2 || size & (size - 1)) {
       std::cerr << "size must be a power of 2 and >= 2\n";
       std::abort();
     }
@@ -75,5 +71,3 @@ private:
   std::vector<Slot> buffer_;
 };
 } // namespace azusayn
-
-#endif

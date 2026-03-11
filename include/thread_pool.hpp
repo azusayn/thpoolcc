@@ -3,8 +3,7 @@
 // | License:   GPLv3.0             |
 // | Date:      2024.1.14           |
 // +--------------------------------+
-#ifndef __THREAD_POOL_CC_H
-#define __THREAD_POOL_CC_H
+#pragma once
 #include "lock_free_queue.hpp"
 #include <atomic>
 #include <condition_variable>
@@ -33,7 +32,7 @@ public:
     if (!lock_free_queue_.Push({std::move(func)})) {
       return false;
     }
-    n_pending_.fetch_add(1, std::memory_order::release);
+    n_pending_.fetch_add(1, std::memory_order_release);
     work_sem_.release();
     return true;
   }
@@ -52,16 +51,20 @@ public:
 
   void Wait() {
     std::unique_lock<std::mutex> lock(cv_idle_mutex_);
-    while (n_pending_.load(std::memory_order::relaxed)) {
+    while (n_pending_.load(std::memory_order_relaxed)) {
       cv_idle_.wait(lock);
     }
   }
 
 private:
+  struct Task {
+    std::function<void()> func;
+  };
+
   void loop() {
-    while (thpool_alive_.load(std::memory_order::acquire)) {
+    while (thpool_alive_.load(std::memory_order_acquire)) {
       work_sem_.acquire();
-      if (!thpool_alive_.load(std::memory_order::acquire)) {
+      if (!thpool_alive_.load(std::memory_order_acquire)) {
         break;
       }
       Task t;
@@ -69,16 +72,12 @@ private:
         std::this_thread::yield();
       }
       t.func();
-      if (n_pending_.fetch_sub(1, std::memory_order::release) == 1) {
+      if (n_pending_.fetch_sub(1, std::memory_order_release) == 1) {
         std::lock_guard<std::mutex> lock(cv_idle_mutex_);
         cv_idle_.notify_all();
       }
     }
   }
-
-  struct Task {
-    std::function<void()> func;
-  };
 
   LockFreeQueue<Task> lock_free_queue_;
   std::vector<std::thread> threads_;
@@ -88,6 +87,4 @@ private:
   std::atomic<bool> thpool_alive_;
   std::atomic<uint32_t> n_pending_;
 };
-}; // namespace azusayn
-
-#endif
+} // namespace azusayn
