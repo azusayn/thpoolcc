@@ -3,9 +3,6 @@
 
 extern "C" {
 void *NewThreadPool(uint32_t n_threads, uint32_t queueSize) {
-  if ((n_threads <= 0) || queueSize < 2 || (queueSize & (queueSize - 1))) {
-    return nullptr;
-  }
   return new azusayn::ThreadPool(n_threads, queueSize);
 }
 
