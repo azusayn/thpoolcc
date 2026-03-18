@@ -1,10 +1,11 @@
 #include "thread_pool_wrapper.h"
 #include "thread_pool.hpp"
 #include <cstdint>
+#include <iostream>
 
 extern "C" {
 
-extern void GoInvoke(uintptr_t);
+extern void goInvoke(uintptr_t);
 
 void *NewThreadPool(uint32_t n_threads, uint32_t queueSize) {
   return new azusayn::ThreadPool(n_threads, queueSize);
@@ -12,7 +13,7 @@ void *NewThreadPool(uint32_t n_threads, uint32_t queueSize) {
 
 bool Submit(void *thpool, uintptr_t arg) {
   return static_cast<azusayn::ThreadPool *>(thpool)->Submit(
-      [arg]() { GoInvoke(arg); });
+      [arg]() { goInvoke(arg); });
 }
 
 void Destroy(void *thpool) {

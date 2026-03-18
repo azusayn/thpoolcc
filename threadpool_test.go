@@ -1,14 +1,24 @@
 package threadpool_test
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/azusayn/threadpool"
 )
 
-func TestNewThreadPool(t *testing.T) {
-	if _, err := threadpool.NewThreadPool(1, 4); err != nil {
+func TestThreadpool(t *testing.T) {
+	thp, err := threadpool.NewThreadPool(4, 8)
+	if err != nil {
 		t.Fatal(err.Error())
 	}
-	t.Log("success")
+	for range 5 {
+		thp.Submit(func() {
+			fmt.Println("excuted in goroutine")
+			time.Sleep(time.Second * 1)
+		})
+	}
+	thp.Wait()
+	thp.Destroy()
 }
