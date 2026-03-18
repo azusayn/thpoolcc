@@ -7,7 +7,7 @@ extern "C" {
 
 void *NewThreadPool(uint32_t n_threads, uint32_t queueSize);
 
-bool Submit(void *thpool, void (*func)(void));
+bool Submit(void *thpool, void (*func)(uintptr_t), uintptr_t arg);
 
 void Destroy(void *thpool);
 
