@@ -58,15 +58,15 @@ public:
   }
 
 private:
-  struct Slot {
+  struct alignas(64) Slot {
     T data;
     std::atomic<uint64_t> sequence;
   };
 
   inline uint64_t idx(uint64_t val) { return val & (size_ - 1); }
 
-  std::atomic<uint64_t> head_;
-  std::atomic<uint64_t> tail_;
+  alignas(64) std::atomic<uint64_t> head_;
+  alignas(64) std::atomic<uint64_t> tail_;
   uint32_t size_;
   std::vector<Slot> buffer_;
 };
