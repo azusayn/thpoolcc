@@ -4,13 +4,15 @@
 
 extern "C" {
 
+extern void GoInvoke(uintptr_t);
+
 void *NewThreadPool(uint32_t n_threads, uint32_t queueSize) {
   return new azusayn::ThreadPool(n_threads, queueSize);
 }
 
-bool Submit(void *thpool, void (*func)(uintptr_t), uintptr_t arg) {
+bool Submit(void *thpool, uintptr_t arg) {
   return static_cast<azusayn::ThreadPool *>(thpool)->Submit(
-      [func, arg]() { func(arg); });
+      [arg]() { GoInvoke(arg); });
 }
 
 void Destroy(void *thpool) {
