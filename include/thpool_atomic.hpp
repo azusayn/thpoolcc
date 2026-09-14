@@ -1,7 +1,7 @@
 // +--------------------------------+
 // | Author:    azusaings@gmail.com |
 // | License:   GPLv3.0             |
-// | Date:      2024.1.14           |
+// | Date:      2026.3.9            |
 // +--------------------------------+
 #pragma once
 #include "lock_free_queue.hpp"
